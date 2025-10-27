@@ -1,23 +1,20 @@
 import { GoogleGenAI } from "@google/genai";
 
-// The API key is loaded from the environment variable `process.env.API_KEY`.
-// Do NOT paste your key here directly.
-// Instead, configure it in your deployment environment (e.g., GitHub Secrets).
-const API_KEY = process.env.API_KEY;
+// Creates a new GoogleGenAI instance.
+// This function reads the API key from the browser's local storage,
+// allowing any user to use their own key.
+const getAiClient = () => {
+  const apiKey = localStorage.getItem('gemini_api_key');
+  if (!apiKey) {
+    // This error is a safeguard. The UI should prevent API calls without a key.
+    throw new Error("Chiave API di Gemini non trovata nell'archivio locale. Per favore, imposta la tua chiave API nell'applicazione.");
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
-if (!API_KEY) {
-  // This error message will be shown in the browser console if the API key is not configured in the environment.
-  console.error("Gemini API key not found. Please set the API_KEY environment variable.");
-}
-
-// The GoogleGenAI client is initialized here using the key from the environment.
-const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 export async function processTranscript(text: string): Promise<{ improvedText: string; summary: string }> {
-  if (!API_KEY) {
-    throw new Error("API key is not configured. Please set it in your deployment environment.");
-  }
-  
+  const ai = getAiClient();
   try {
     // 1. Improve the text
     const improveResponse = await ai.models.generateContent({
@@ -27,7 +24,7 @@ export async function processTranscript(text: string): Promise<{ improvedText: s
     const improvedText = improveResponse.text;
 
     if (!improvedText) {
-        throw new Error("Improving the text failed or returned empty.");
+        throw new Error("Il miglioramento del testo è fallito o non ha restituito alcun risultato.");
     }
 
     // 2. Summarize the improved Italian text
@@ -38,23 +35,25 @@ export async function processTranscript(text: string): Promise<{ improvedText: s
     const summary = summarizeResponse.text;
 
     if (!summary) {
-        throw new Error("Summarization failed or returned empty.");
+        throw new Error("La creazione del riassunto è fallita o non ha restituito alcun risultato.");
     }
     
     return { improvedText, summary };
   } catch (error) {
     console.error("Error with Gemini API:", error);
     if (error instanceof Error) {
-        throw new Error(`Failed to process text with Gemini API: ${error.message}`);
+        // Check for specific authentication errors.
+        if (error.message.includes('API key not valid')) {
+             throw new Error(`La tua chiave API di Gemini non è valida. Controllala e riprova.`);
+        }
+        throw new Error(`Impossibile elaborare il testo con l'API Gemini: ${error.message}`);
     }
-    throw new Error("An unknown error occurred while processing text with Gemini API.");
+    throw new Error("Si è verificato un errore sconosciuto durante l'elaborazione del testo con l'API Gemini.");
   }
 }
 
 export async function translateToItalian(text: string): Promise<string> {
-  if (!API_KEY) {
-    throw new Error("API key is not configured. Please set it in your deployment environment.");
-  }
+  const ai = getAiClient();
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -62,14 +61,14 @@ export async function translateToItalian(text: string): Promise<string> {
     });
     const translatedText = response.text;
     if (!translatedText) {
-      throw new Error("Translation failed or returned empty.");
+      throw new Error("La traduzione è fallita o non ha restituito alcun risultato.");
     }
     return translatedText;
   } catch (error) {
     console.error("Error translating with Gemini API:", error);
     if (error instanceof Error) {
-        throw new Error(`Failed to translate text with Gemini API: ${error.message}`);
+        throw new Error(`Impossibile tradurre il testo con l'API Gemini: ${error.message}`);
     }
-    throw new Error("An unknown error occurred while translating text with Gemini API.");
+    throw new Error("Si è verificato un errore sconosciuto durante la traduzione del testo con l'API Gemini.");
   }
 }

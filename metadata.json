@@ -1,5 +1,6 @@
+
 {
-  "name": "Video Script Translator",
-  "description": "An application to improve a raw text transcript and generate a summary using AI.",
+  "name": "Traduttore di Script Video",
+  "description": "Un'applicazione per migliorare la trascrizione di un testo grezzo e generare un riassunto utilizzando l'IA.",
   "requestFramePermissions": []
 }
