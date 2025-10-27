@@ -9,24 +9,27 @@
     <link rel="manifest" href="./manifest.json" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- 1. Aggiunto il traduttore Babel -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      @keyframes fade-in {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fade-in 0.5s ease-out forwards;
+      }
+    </style>
   <script type="importmap">
 {
   "imports": {
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0"
   }
 }
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-gray-900 text-gray-100">
-    <div id="root"></div>
-    <!-- 2. Modificato il tipo di script per farlo elaborare da Babel e usato un percorso relativo -->
-    <script type="text/babel" data-type="module" src="./index.tsx"></script>
+  <body class="bg-gray-900 text-gray-100 font-sans">
+    <div id="app-container"></div>
+    <script type="module" src="./index.js"></script>
   <script type="module" src="/index.tsx"></script>
 </body>
 </html>
