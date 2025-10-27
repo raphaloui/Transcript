@@ -10,6 +10,8 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 1. Aggiunto il traduttore Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script type="importmap">
 {
   "imports": {
@@ -20,10 +22,10 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
   <body class="bg-gray-900 text-gray-100">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <!-- 2. Modificato il tipo di script per farlo elaborare da Babel -->
+    <script type="text/babel" data-type="module" src="/index.tsx"></script>
   </body>
 </html>
