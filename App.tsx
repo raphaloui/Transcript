@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { processTranscript, translateToItalian } from './services/geminiService';
-import type { ProcessedData } from './types';
-import ResultCard from './components/ResultCard';
-import Loader from './components/Loader';
+import { processTranscript, translateToItalian } from './services/geminiService.ts';
+import type { ProcessedData } from './types.ts';
+import ResultCard from './components/ResultCard.tsx';
+import Loader from './components/Loader.tsx';
 
 // This regex matches timestamps in formats like [00:00:05] or 0:05 followed by an optional space.
 // It's kept as a utility in case users paste transcripts with timestamps.
@@ -336,34 +336,4 @@ const App: React.FC = () => {
                       <span className="ml-2">Traduzione in corso...</span>
                     </>
                   ) : result.translatedImprovedText ? (
-                    'Tradotto ✓'
-                  ) : (
-                    'Traduci in Italiano'
-                  )}
-                </button>
-              </div>
-            </>
-          )}
-
-          {!isLoading && !result && !error && (
-            <div className="text-center text-gray-500 mt-16 p-8 border-2 border-dashed border-gray-700 rounded-xl">
-              <p className="text-xl">I tuoi risultati appariranno qui.</p>
-              <p>Incolla una trascrizione o carica un file per iniziare.</p>
-            </div>
-          )}
-        </div>
-      </main>
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out forwards;
-        }
-      `}</style>
-    </div>
-  );
-};
-
-export default App;
+                    
