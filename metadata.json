@@ -1,0 +1,5 @@
+{
+  "name": "Video Script Translator",
+  "description": "An application to improve a raw text transcript and generate a summary using AI.",
+  "requestFramePermissions": []
+}
