@@ -1,8 +1,22 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { processTranscript, translateToItalian } from './services/geminiService';
 import type { ProcessedData } from './types';
 import ResultCard from './components/ResultCard';
 import Loader from './components/Loader';
+
+// This is required for TypeScript to recognize the aistudio object on the window.
+// Fix: The inline type declaration for `window.aistudio` was causing a conflict.
+// Replaced it with a named interface `AIStudio` to align with other declarations,
+// resolving the type mismatch error as suggested by the compiler.
+interface AIStudio {
+  hasSelectedApiKey: () => Promise<boolean>;
+  openSelectKey: () => Promise<void>;
+}
+declare global {
+  interface Window {
+    aistudio: AIStudio;
+  }
+}
 
 // This regex matches timestamps in formats like [00:00:05] or 0:05 followed by an optional space.
 // It's kept as a utility in case users paste transcripts with timestamps.
@@ -23,6 +37,51 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ProcessedData | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [hasApiKey, setHasApiKey] = useState<boolean>(false);
+  const [checkingApiKey, setCheckingApiKey] = useState<boolean>(true);
+  
+  useEffect(() => {
+    const checkKey = async () => {
+      setCheckingApiKey(true);
+      try {
+        if (await window.aistudio.hasSelectedApiKey()) {
+          setHasApiKey(true);
+        }
+      } catch (e) {
+        console.error("aistudio SDK not available.", e);
+        setError("Could not connect to the API key service. Please refresh the page.");
+      } finally {
+        setCheckingApiKey(false);
+      }
+    };
+    checkKey();
+  }, []);
+
+  const handleSelectKey = async () => {
+    setError(null);
+    try {
+      await window.aistudio.openSelectKey();
+      // Assume success to avoid race conditions and update UI immediately
+      setHasApiKey(true);
+    } catch (e) {
+      console.error("Failed to open API key selection:", e);
+      setError("Could not open the API key selection dialog. Please try refreshing the page.");
+    }
+  };
+  
+  const handleApiError = (err: unknown) => {
+    let errorMessage = "An unknown error occurred.";
+    if (err instanceof Error) {
+        errorMessage = err.message;
+        if (errorMessage.includes("Requested entity was not found")) {
+            setError("Your API key appears to be invalid. Please select a valid API key to continue.");
+            setHasApiKey(false); // Reset key state to show the selection screen again.
+            return true; // Indicates a key error was handled
+        }
+    }
+    setError(errorMessage);
+    return false;
+  };
 
   const handleProcessText = useCallback(async () => {
     if (!inputText.trim()) {
@@ -39,11 +98,10 @@ const App: React.FC = () => {
       const { improvedText, summary } = await processTranscript(originalScript);
       setResult({ improvedText, summary });
     } catch (err) {
-      let errorMessage = "An unknown error occurred.";
-       if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      setError(errorMessage);
+       if(handleApiError(err)) {
+           setIsLoading(false);
+           return;
+       }
     } finally {
       setIsLoading(false);
     }
@@ -66,11 +124,10 @@ const App: React.FC = () => {
             translatedSummary: translatedSummary
         }));
     } catch (err) {
-       let errorMessage = "An unknown error occurred during translation.";
-       if (err instanceof Error) {
-        errorMessage = err.message;
-      }
-      setError(errorMessage);
+       if(handleApiError(err)) {
+           setIsTranslating(false);
+           return;
+       }
     } finally {
         setIsTranslating(false);
     }
@@ -123,7 +180,43 @@ const App: React.FC = () => {
     setResult(null);
     setError(null);
   };
+  
+  if (checkingApiKey) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center text-white p-4">
+        <Loader />
+        <p className="mt-4 text-lg">Verifying API Key...</p>
+      </div>
+    );
+  }
 
+  if (!hasApiKey) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/40 to-gray-900 flex items-center justify-center p-4">
+        <div className="bg-gray-800/50 backdrop-blur-sm p-8 rounded-xl shadow-2xl ring-1 ring-white/10 max-w-lg text-center">
+          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-300 mb-4">
+            API Key Required
+          </h2>
+          <p className="text-gray-400 mb-6">
+            To use this application, you need to select a Gemini API key. Your key is used securely and is required to interact with the AI model.
+          </p>
+          <button
+            onClick={handleSelectKey}
+            className="w-full bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-blue-500 transition-all duration-200 shadow-lg hover:shadow-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
+          >
+            Select Your API Key
+          </button>
+          <p className="text-xs text-gray-500 mt-4">
+            For more information on billing, please visit the{' '}
+            <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">
+              official documentation
+            </a>.
+          </p>
+           {error && <p className="text-red-400 mt-4 text-center">{error}</p>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/40 to-gray-900 font-sans p-4 sm:p-6 lg:p-8">
