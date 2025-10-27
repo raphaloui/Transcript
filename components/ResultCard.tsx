@@ -1,4 +1,3 @@
-
 import React from 'react';
 import IconButton from './IconButton';
 
@@ -19,7 +18,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ title, text, onSave }) => {
     <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-lg flex flex-col h-full ring-1 ring-white/10">
       <div className="flex justify-between items-center p-4 border-b border-gray-700">
         <h3 className="text-lg font-semibold text-blue-300">{title}</h3>
-        <IconButton onClick={onSave} aria-label={`Salva ${title}`}>
+        <IconButton onClick={onSave} aria-label={`Save ${title}`}>
           <DownloadIcon />
         </IconButton>
       </div>

@@ -1,13 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 
 // Creates a new GoogleGenAI instance.
-// This function reads the API key from the browser's local storage,
-// allowing any user to use their own key.
+// This function is called before each API request to ensure the client uses the latest,
+// securely provided API key from the environment.
 const getAiClient = () => {
-  const apiKey = localStorage.getItem('gemini_api_key');
+  const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    // This error is a safeguard. The UI should prevent API calls without a key.
-    throw new Error("Chiave API di Gemini non trovata nell'archivio locale. Per favore, imposta la tua chiave API nell'applicazione.");
+    // This error is a safeguard but should not be hit in a configured environment
+    // where the user is prompted to select a key.
+    throw new Error("Gemini API key not found. Please select an API key to use this application.");
   }
   return new GoogleGenAI({ apiKey });
 };
@@ -24,7 +25,7 @@ export async function processTranscript(text: string): Promise<{ improvedText: s
     const improvedText = improveResponse.text;
 
     if (!improvedText) {
-        throw new Error("Il miglioramento del testo è fallito o non ha restituito alcun risultato.");
+        throw new Error("Improving the text failed or returned empty.");
     }
 
     // 2. Summarize the improved Italian text
@@ -35,20 +36,16 @@ export async function processTranscript(text: string): Promise<{ improvedText: s
     const summary = summarizeResponse.text;
 
     if (!summary) {
-        throw new Error("La creazione del riassunto è fallita o non ha restituito alcun risultato.");
+        throw new Error("Summarization failed or returned empty.");
     }
     
     return { improvedText, summary };
   } catch (error) {
     console.error("Error with Gemini API:", error);
     if (error instanceof Error) {
-        // Check for specific authentication errors.
-        if (error.message.includes('API key not valid')) {
-             throw new Error(`La tua chiave API di Gemini non è valida. Controllala e riprova.`);
-        }
-        throw new Error(`Impossibile elaborare il testo con l'API Gemini: ${error.message}`);
+        throw new Error(`Failed to process text with Gemini API: ${error.message}`);
     }
-    throw new Error("Si è verificato un errore sconosciuto durante l'elaborazione del testo con l'API Gemini.");
+    throw new Error("An unknown error occurred while processing text with Gemini API.");
   }
 }
 
@@ -61,14 +58,14 @@ export async function translateToItalian(text: string): Promise<string> {
     });
     const translatedText = response.text;
     if (!translatedText) {
-      throw new Error("La traduzione è fallita o non ha restituito alcun risultato.");
+      throw new Error("Translation failed or returned empty.");
     }
     return translatedText;
   } catch (error) {
     console.error("Error translating with Gemini API:", error);
     if (error instanceof Error) {
-        throw new Error(`Impossibile tradurre il testo con l'API Gemini: ${error.message}`);
+        throw new Error(`Failed to translate text with Gemini API: ${error.message}`);
     }
-    throw new Error("Si è verificato un errore sconosciuto durante la traduzione del testo con l'API Gemini.");
+    throw new Error("An unknown error occurred while translating text with Gemini API.");
   }
 }
