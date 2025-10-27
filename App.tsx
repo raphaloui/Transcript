@@ -1,20 +1,17 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { processTranscript, translateToItalian } from './services/geminiService';
-import type { ProcessedData } from './types';
-import ResultCard from './components/ResultCard';
-import Loader from './components/Loader';
 
-// This is required for TypeScript to recognize the aistudio object on the window.
-// Fix: The inline type declaration for `window.aistudio` was causing a conflict.
-// Replaced it with a named interface `AIStudio` to align with other declarations,
-// resolving the type mismatch error as suggested by the compiler.
-interface AIStudio {
-  hasSelectedApiKey: () => Promise<boolean>;
-  openSelectKey: () => Promise<void>;
-}
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { processTranscript, translateToItalian } from './services/geminiService.ts';
+import type { ProcessedData } from './types.ts';
+import ResultCard from './components/ResultCard.tsx';
+import Loader from './components/Loader.tsx';
+
+// Fix: Resolves a TypeScript error "All declarations of 'aistudio' must have identical modifiers" by inlining the type definition for `window.aistudio`. This avoids potential conflicts with other global type declarations.
 declare global {
   interface Window {
-    aistudio: AIStudio;
+    aistudio: {
+      hasSelectedApiKey: () => Promise<boolean>;
+      openSelectKey: () => Promise<void>;
+    };
   }
 }
 
